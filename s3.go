@@ -4,7 +4,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager/s3manageriface"
-	"github.com/paulhenri-l/gouploader/contracts"
 	"github.com/pkg/errors"
 	"os"
 	"path"
@@ -23,7 +22,7 @@ func NewS3(bucket string, s3Uploader s3manageriface.UploaderAPI) *S3 {
 	}
 }
 
-func (u *S3) Upload(file string) contracts.UploadResult {
+func (u *S3) Upload(file string) *UploadResult {
 	ur := &UploadResult{Filepath: file}
 
 	fi, err := os.Stat(file)

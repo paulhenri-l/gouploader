@@ -11,22 +11,6 @@ type UploadResult struct {
 	Error    error
 }
 
-func (ur *UploadResult) GetFilepath() string {
-	return ur.Filepath
-}
-
-func (ur *UploadResult) GetSize() int64 {
-	return ur.Size
-}
-
-func (ur *UploadResult) GetStart() time.Time {
-	return ur.Start
-}
-
-func (ur *UploadResult) GetEnd() time.Time {
-	return ur.End
-}
-
 func (ur *UploadResult) GetDuration() time.Duration {
 	return ur.End.Sub(ur.Start)
 }
