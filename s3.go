@@ -4,6 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager/s3manageriface"
+	"github.com/paulhenri-l/gouploader/entities"
 	"github.com/pkg/errors"
 	"os"
 	"path"
@@ -22,8 +23,8 @@ func NewS3(bucket string, s3Uploader s3manageriface.UploaderAPI) *S3 {
 	}
 }
 
-func (u *S3) Upload(file string) *UploadResult {
-	ur := &UploadResult{Filepath: file}
+func (u *S3) Upload(file string) *entities.UploadResult {
+	ur := &entities.UploadResult{Filepath: file}
 
 	fi, err := os.Stat(file)
 	if err != nil {
@@ -34,6 +35,8 @@ func (u *S3) Upload(file string) *UploadResult {
 	ur.Size = fi.Size()
 
 	f, err := os.Open(file)
+	defer f.Close()
+
 	if err != nil {
 		ur.Error = errors.Wrap(err, "cannot open file")
 		return ur

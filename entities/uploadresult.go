@@ -1,4 +1,4 @@
-package gouploader
+package entities
 
 import "time"
 
