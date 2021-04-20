@@ -6,8 +6,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/paulhenri-l/gouploader/mocks"
 	"github.com/pkg/errors"
+	"github.com/rs/xid"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 	"testing"
@@ -17,9 +18,17 @@ func TestS3_Upload(t *testing.T) {
 	m, _ := fakeS3Uploader(t)
 	f := fakeFile(t, "hello")
 	uploader := NewS3("some-bucket", m)
-	matcher := newUploadMatcher(f, "some-bucket")
 
-	m.EXPECT().Upload(gomock.All(matcher)).Return(&s3manager.UploadOutput{}, nil)
+	m.EXPECT().Upload(gomock.Any()).DoAndReturn(func(input *s3manager.UploadInput) (*s3manager.UploadOutput, error) {
+		assert.Equal(t, "some-bucket", *input.Bucket)
+		assert.Equal(t, path.Base(f), *input.Key)
+
+		b, _ := io.ReadAll(input.Body)
+		assert.Equal(t, "hello", string(b))
+
+		return &s3manager.UploadOutput{}, nil
+	})
+
 	res := uploader.Upload(f)
 
 	assert.NoError(t, res.GetError())
@@ -60,7 +69,8 @@ func fakeS3Uploader(t *testing.T) (*mocks.MockUploaderAPI, *gomock.Controller) {
 
 func fakeFile(t *testing.T, contents string) string {
 	tmp := t.TempDir()
-	fp := fmt.Sprintf("%s/%s", tmp, "fake_file")
+	guid := xid.New()
+	fp := fmt.Sprintf("%s/%s_%s", tmp, "fake_file", guid.String())
 
 	f, err := os.Create(fp)
 	if err != nil {
@@ -74,53 +84,3 @@ func fakeFile(t *testing.T, contents string) string {
 
 	return fp
 }
-
-type uploadMatcher struct {
-	filePath string
-	bucket   string
-}
-
-func newUploadMatcher(filePath, bucket string) *uploadMatcher {
-	return &uploadMatcher{
-		filePath: filePath,
-		bucket:   bucket,
-	}
-}
-
-func (u uploadMatcher) Matches(x interface{}) bool {
-	ui, ok := x.(*s3manager.UploadInput)
-	if !ok {
-		return false
-	}
-
-	expectedKey := path.Base(u.filePath)
-	if *ui.Key != expectedKey {
-		return false
-	}
-
-	if *ui.Bucket != u.bucket {
-		return false
-	}
-
-	b, err := ioutil.ReadAll(ui.Body)
-	if err != nil {
-		return false
-	}
-
-	f, err := os.Open(u.filePath)
-	if err != nil {
-		return false
-	}
-
-	expectedContents, err := ioutil.ReadAll(f)
-	if err != nil {
-		return false
-	}
-
-	return string(b) == string(expectedContents)
-}
-
-func (u uploadMatcher) String() string {
-	return "Upload input did not match with uploaded file"
-}
-

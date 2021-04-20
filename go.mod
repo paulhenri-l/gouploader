@@ -8,6 +8,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.5.0
 	github.com/pkg/errors v0.9.1
+	github.com/rs/xid v1.3.0 // indirect
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/net v0.0.0-20210420072503-d25e30425868 // indirect
